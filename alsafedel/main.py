@@ -22,10 +22,10 @@ def main():
                             description="A CLI tool for finding unused sample packs")
     parser.add_argument("-p", "--projdir", type=dir_path, required=True)
     parser.add_argument("-s", "--sampledir", type=dir_path, required=True)
+    # maybe in the future
     # parser.add_argument("-d", "--delete", action='store_true')
     parser.add_argument("-r", "--recursive", action='store_true')
     parser.add_argument("--debug", action="store_true")
-    # makes it faster
     parser.add_argument("--include-backups", action="store_true")
 
     try:
