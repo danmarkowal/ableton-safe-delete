@@ -2,6 +2,7 @@
 
 import os
 from argparse import ArgumentParser
+from multiprocessing import Pool
 
 from alsafedel.cli import clear_line, down, print_progress_bar, up
 from alsafedel.project import get_project_files, process_project_file
@@ -14,9 +15,6 @@ def dir_path(arg):
         return arg
     else:
         raise NotADirectoryError(arg)
-
-
-is_debug = False
 
 
 def main():
@@ -32,37 +30,34 @@ def main():
 
     try:
         args = parser.parse_args()
-        is_debug = args.debug
     except NotADirectoryError as e:
         print(f"Folder not found: '{e}'")
         return
 
     samplepacks = get_samplepacks(args.sampledir)
-    if is_debug:
+    if args.debug:
         print(f'Found {len(samplepacks)} samplepacks')
 
     samples = get_samples(args.sampledir)
-    if is_debug:
+    if args.debug:
         print(f'Found {len(samples)} samples')
 
     project_files = get_project_files(
         args.projdir, args.recursive, args.include_backups)
 
     marked_samples = set()
-    for i, file in enumerate(project_files):
-        clear_line()
-        print(f"Scanning {os.path.basename(file)}")  # continues to next line
-        print_progress_bar(i + 1, len(project_files),
-                           prefix="Progress", length=32)  # same line
-        up()  # go back up to 'print'
-        marked_samples.update(process_project_file(file))
-    clear_line()  # clear print
-    down()
-    clear_line()  # clear progress bar
-    up()  # return to current line
+    total_files = len(project_files)
+    processed = 0
+    with Pool(processes=4) as p:
+        for result in p.imap_unordered(process_project_file, project_files):
+            marked_samples.update(result)
+            processed += 1
+            print_progress_bar(processed, total_files,
+                               prefix="Progress", length=32)
+    clear_line()
 
     used_samples = samples.intersection(marked_samples)
-    if is_debug:
+    if args.debug:
         print(
             f'Found {len(used_samples)} samples in use across {len(project_files)} project files')
 
