@@ -45,18 +45,20 @@ def main():
     project_files = get_project_files(
         args.projdir, args.recursive, args.include_backups)
 
-    marked_samples = set()
+    project_samples = set()
     total_files = len(project_files)
     processed = 0
     with Pool(processes=4) as p:
         for result in p.imap_unordered(process_project_file, project_files):
-            marked_samples.update(result)
+            project_samples.update(result)
             processed += 1
             print_progress_bar(processed, total_files,
                                prefix="Progress", length=32)
     clear_line()
 
-    used_samples = samples.intersection(marked_samples)
+    used_samples = set(samples.keys()).intersection(project_samples)
+    used_samples = set(
+        map(lambda sample_path: samples[sample_path], used_samples))
     if args.debug:
         print(
             f'Found {len(used_samples)} samples in use across {len(project_files)} project files')

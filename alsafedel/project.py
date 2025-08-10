@@ -14,7 +14,7 @@ class DirType(Enum):
     BACKUP = auto()  # this folder contains backups which may be skipped
 
 
-def process_project_file(file: str):
+def process_project_file(file: str) -> set[str]:
     with open(file, "rb") as f:
         text = f.read()
         try:
@@ -27,26 +27,19 @@ def process_project_file(file: str):
     return {os.path.abspath(path) for path in sample_paths}
 
 
-def process_project_files(files: set[str]):
-    marked_samples = set()
-    for file in files:
-        marked_samples.update(process_project_file(file))
-    return marked_samples
-
-
-def is_project_file(file: str):
+def is_project_file(file: str) -> bool:
     return file.lower().endswith(".als")
 
 
-def is_project_dir(folder: str):
+def is_project_dir(folder: str) -> bool:
     return any(is_project_file(child) for child in os.listdir(folder))
 
 
-def is_backup_dir(folder: str):
+def is_backup_dir(folder: str) -> bool:
     return os.path.basename(folder) == "Backup"
 
 
-def get_project_files(folder: str, recursive: bool, include_backups: bool, dir_type: DirType = DirType.DEFAULT):
+def get_project_files(folder: str, recursive: bool, include_backups: bool, dir_type: DirType = DirType.DEFAULT) -> set[str]:
     # functions somewhat like a state machine
     # all directories are marked as DirType.DEFAULT by default
     # if a default directory has at least one project file then it is marked as DirType.PROJECT
