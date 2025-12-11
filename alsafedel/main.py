@@ -3,9 +3,11 @@
 import os
 from argparse import ArgumentParser
 
-from alsafedel.formatter import Formatter
-from alsafedel.scanner import Scanner
+
 from alsafedel.cli import print_progress_bar, clear_line
+from alsafedel.formatter import Formatter
+from alsafedel.process import is_process_running
+from alsafedel.scanner import Scanner
 
 
 def dir_path(arg):
@@ -30,6 +32,10 @@ def main():
         args = parser.parse_args()
     except NotADirectoryError as e:
         print(f"Folder not found: '{e}'")
+        return
+
+    if is_process_running("Live"):
+        print("Please close Ableton Live before running this command")
         return
 
     scanner = Scanner(lambda project_index, project_count: print_progress_bar(
