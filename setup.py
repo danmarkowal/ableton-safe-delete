@@ -4,6 +4,9 @@ setup(
     name='alsafedel',
     version='0.1',
     packages=find_packages(),
+    requires=[
+        "psutil"
+    ],
     entry_points={
         'console_scripts': [
             'alsafedel=alsafedel.main:main',
