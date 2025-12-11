@@ -8,5 +8,5 @@ setup(
         'console_scripts': [
             'alsafedel=alsafedel.main:main',
         ],
-    }
+    },
 )

@@ -3,6 +3,8 @@ import os
 import re
 from enum import Enum, auto
 
+from alsafedel.samples import Sample
+
 # pre-compile regex
 PATH_PATTERN = re.compile(
     r'<SampleRef>.*?<Path.*?Value="([^"]+?)".*?<\/SampleRef>', re.DOTALL)
@@ -14,7 +16,7 @@ class DirType(Enum):
     BACKUP = auto()  # this folder contains backups which may be skipped
 
 
-def process_project_file(file: str) -> set[str]:
+def process_project_file(file: str) -> set[Sample]:
     with open(file, "rb") as f:
         text = f.read()
         try:
@@ -24,7 +26,7 @@ def process_project_file(file: str) -> set[str]:
 
     sample_paths = re.findall(PATH_PATTERN, xml)
     # ensure that paths are absolute
-    return {os.path.abspath(path) for path in sample_paths}
+    return {Sample(os.path.abspath(path)) for path in sample_paths}
 
 
 def is_project_file(file: str) -> bool:

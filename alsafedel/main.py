@@ -2,12 +2,10 @@
 
 import os
 from argparse import ArgumentParser
-from multiprocessing import Pool
 
-from alsafedel.cli import clear_line, down, print_progress_bar, up
-from alsafedel.project import get_project_files, process_project_file
-from alsafedel.samples import (get_samplepacks, get_samples,
-                               get_unused_samplepacks)
+from alsafedel.formatter import Formatter
+from alsafedel.scanner import Scanner
+from alsafedel.cli import print_progress_bar, clear_line
 
 
 def dir_path(arg):
@@ -34,46 +32,14 @@ def main():
         print(f"Folder not found: '{e}'")
         return
 
-    samplepacks = get_samplepacks(args.sampledir)
-    if args.debug:
-        print(f'Found {len(samplepacks)} samplepacks')
-
-    samples = get_samples(args.sampledir)
-    if args.debug:
-        print(f'Found {len(samples)} samples')
-
-    project_files = get_project_files(
-        args.projdir, args.recursive, args.include_backups)
-
-    project_samples = set()
-    total_files = len(project_files)
-    processed = 0
-    with Pool(processes=4) as p:
-        for result in p.imap_unordered(process_project_file, project_files):
-            project_samples.update(result)
-            processed += 1
-            print_progress_bar(processed, total_files,
-                               prefix="Progress", length=32)
+    scanner = Scanner(lambda project_index, project_count: print_progress_bar(
+        project_index, project_count, prefix="Progress", length=32))
+    scanner.scan(args.projdir, args.sampledir,
+                 args.recursive, args.include_backups)
     clear_line()
 
-    used_samples = set(samples.keys()).intersection(project_samples)
-    used_samples = set(
-        map(lambda sample_path: samples[sample_path], used_samples))
-    if args.debug:
-        print(
-            f'Found {len(used_samples)} samples in use across {len(project_files)} project files')
-
-    unused_samplepacks = get_unused_samplepacks(samplepacks, used_samples)
-    print_unused(args.sampledir, unused_samplepacks)
-
-
-def print_unused(root_folder: str, unused_samplepacks: set[str]):
-    print(root_folder)
-    if len(unused_samplepacks) == 0:
-        print("   There are no samplepacks that can be deleted in this folder")
-        return
-    for samplepack in unused_samplepacks:
-        print(f"|-- {os.path.basename(samplepack)}")
+    formatter = Formatter()
+    formatter.print_unused(scanner.result.root)
 
 
 if __name__ == "__main__":

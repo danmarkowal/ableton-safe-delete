@@ -10,7 +10,6 @@ ignored_files = (".mid", ".alc")
 @dataclass(frozen=True)
 class Sample:
     path: str = field()
-    samplepack: str | None = field()
 
 
 def is_subpath(path: str, of: str) -> bool:
@@ -41,17 +40,3 @@ def should_ignore(file: str) -> bool:
 
 def is_media_file(file: str) -> bool:
     return file.lower().endswith(supported_files)
-
-
-def get_samples(folder: str, samplepack: str | None = None) -> dict[str, Sample]:
-    samples = {}
-    for child in os.listdir(folder):
-        file = os.path.join(folder, child)
-        if os.path.isdir(file):
-            child_samplepack = file if samplepack is None else samplepack
-            samples.update(get_samples(file, child_samplepack))
-        elif os.path.isfile(file) and is_media_file(file):
-            # ensure path is absolute
-            sample_file = os.path.abspath(file)
-            samples[sample_file] = Sample(sample_file, samplepack)
-    return samples
